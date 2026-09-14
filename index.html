@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Drosophila Connectome AI</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: "Courier New", monospace;
+            background: #080d16;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+
+<body class="text-white min-h-screen">
+
+    <div class="max-w-[1600px] mx-auto p-4">
+
+        <!-- ===================================================== -->
+        <!-- HEADER -->
+        <!-- ===================================================== -->
+
+        <header
+            class="bg-gray-900 border border-gray-800 rounded-xl px-4 py-4 mb-6 flex items-center justify-between"
+        >
+
+            <div>
+                <h1 class="text-xl font-bold text-emerald-400">
+                    Drosophila Connectome AI
+                </h1>
+
+                <p class="text-xs text-gray-400 mt-1">
+                    200-Neuron Biological Neural Network Simulator
+                </p>
+            </div>
+
+            <div class="flex items-center gap-4">
+
+                <!-- Training buttons -->
+
+                <div class="flex items-center gap-2">
+
+                    <button
+                        id="restartTrainingButton"
+                        onclick="restartTraining()"
+                        class="bg-red-600 hover:bg-red-500 px-4 py-2.5 rounded-lg font-bold transition"
+                    >
+                        ↻ Restart GA
+                    </button>
+
+                    <button
+                        id="continueTrainingButton"
+                        onclick="continueTraining()"
+                        class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 rounded-lg font-bold transition"
+                    >
+                        ▶ Continue GA
+                    </button>
+
+                </div>
+
+                <!-- Connection status -->
+
+                <div
+                    id="connectionStatus"
+                    class="px-4 py-2 rounded-full border border-gray-700 bg-gray-800 text-sm text-gray-300"
+                >
+                    Status: Connecting...
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- ===================================================== -->
+        <!-- STATISTICS -->
+        <!-- ===================================================== -->
+
+        <div
+            class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6"
+        >
+
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <div class="text-xs text-gray-400">
+                    CURRENT SCORE
+                </div>
+
+                <div
+                    id="score"
+                    class="text-2xl font-bold text-emerald-400 mt-1"
+                >
+                    0
+                </div>
+            </div>
+
+
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <div class="text-xs text-gray-400">
+                    HIGH SCORE
+                </div>
+
+                <div
+                    id="highScore"
+                    class="text-2xl font-bold text-yellow-400 mt-1"
+                >
+                    0
+                </div>
+            </div>
+
+
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <div class="text-xs text-gray-400">
+                    APPLES EATEN
+                </div>
+
+                <div
+                    id="applesEaten"
+                    class="text-2xl font-bold text-red-400 mt-1"
+                >
+                    0
+                </div>
+            </div>
+
+
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <div class="text-xs text-gray-400">
+                    EVOLUTION GEN
+                </div>
+
+                <div
+                    id="generation"
+                    class="text-2xl font-bold text-cyan-400 mt-1"
+                >
+                    0 / 200
+                </div>
+            </div>
+
+
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <div class="text-xs text-gray-400">
+                    ACTIVE NEURONS
+                </div>
+
+                <div
+                    id="activeNeurons"
+                    class="text-2xl font-bold text-purple-400 mt-1"
+                >
+                    0
+                </div>
+            </div>
+
+
+            <div class="bg-gray-900 p-4 rounded-xl border border-gray-800">
+                <div class="text-xs text-gray-400">
+                    EPISODE
+                </div>
+
+                <div
+                    id="episode"
+                    class="text-2xl font-bold text-white mt-1"
+                >
+                    1
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- ===================================================== -->
+        <!-- MAIN VISUALIZATION -->
+        <!-- ===================================================== -->
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- Snake -->
+
+            <div
+                class="bg-gray-900 border border-gray-800 rounded-xl p-4"
+            >
+
+                <h2 class="font-bold text-gray-300 mb-3">
+                    Environment View
+                </h2>
+
+                <div
+                    class="bg-gray-950 border border-gray-800 rounded-lg p-2 flex justify-center"
+                >
+
+                    <canvas
+                        id="gameCanvas"
+                        width="400"
+                        height="400"
+                        class="w-full max-w-[400px] aspect-square"
+                    ></canvas>
+
+                </div>
+
+                <div
+                    id="gameStatus"
+                    class="text-xs text-gray-500 mt-3 text-center"
+                >
+                    Waiting for simulation...
+                </div>
+
+            </div>
+
+
+            <!-- Brain -->
+
+            <div
+                class="bg-gray-900 border border-gray-800 rounded-xl p-4"
+            >
+
+                <h2 class="font-bold text-gray-300 mb-3">
+                    Connectome Firing Map
+                </h2>
+
+                <div
+                    class="bg-gray-950 border border-gray-800 rounded-lg p-2 flex justify-center"
+                >
+
+                    <canvas
+                        id="brainCanvas"
+                        width="400"
+                        height="400"
+                        class="w-full max-w-[400px] aspect-square"
+                    ></canvas>
+
+                </div>
+
+                <div
+                    id="brainStatus"
+                    class="text-xs text-gray-500 mt-3 text-center"
+                >
+                    Waiting for neural activity...
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ===================================================== -->
+        <!-- TRAINING STATUS -->
+        <!-- ===================================================== -->
+
+        <div
+            class="bg-gray-900 border border-gray-800 rounded-xl p-4 mt-6"
+        >
+
+            <div
+                class="flex flex-wrap gap-x-6 gap-y-2 text-xs text-gray-400"
+            >
+
+                <span id="trainingStatus">
+                    Training: Idle
+                </span>
+
+                <span id="fitnessStatus">
+                    Fitness: 0
+                </span>
+
+                <span id="foodStatus">
+                    Mean Food: 0
+                </span>
+
+                <span id="meanActivity">
+                    Mean Activity: 0
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ========================================================= -->
+
+    <script>
+
+        // ========================================================
+        // CANVAS
+        // ========================================================
+
+        const gameCanvas =
+            document.getElementById(
+                "gameCanvas"
+            );
+
+        const brainCanvas =
+            document.getElementById(
+                "brainCanvas"
+            );
+
+        const gCtx =
+            gameCanvas.getContext("2d");
+
+        const bCtx =
+            brainCanvas.getContext("2d");
+
+
+        // ========================================================
+        // DASHBOARD ELEMENTS
+        // ========================================================
+
+        const scoreEl =
+            document.getElementById(
+                "score"
+            );
+
+        const highScoreEl =
+            document.getElementById(
+                "highScore"
+            );
+
+        const applesEatenEl =
+            document.getElementById(
+                "applesEaten"
+            );
+
+        const generationEl =
+            document.getElementById(
+                "generation"
+            );
+
+        const activeNeuronsEl =
+            document.getElementById(
+                "activeNeurons"
+            );
+
+        const episodeEl =
+            document.getElementById(
+                "episode"
+            );
+
+        const connectionStatusEl =
+            document.getElementById(
+                "connectionStatus"
+            );
+
+        const trainingStatusEl =
+            document.getElementById(
+                "trainingStatus"
+            );
+
+        const fitnessStatusEl =
+            document.getElementById(
+                "fitnessStatus"
+            );
+
+        const foodStatusEl =
+            document.getElementById(
+                "foodStatus"
+            );
+
+        const meanActivityEl =
+            document.getElementById(
+                "meanActivity"
+            );
+
+        const gameStatusEl =
+            document.getElementById(
+                "gameStatus"
+            );
+
+        const brainStatusEl =
+            document.getElementById(
+                "brainStatus"
+            );
+
+        const restartTrainingButton =
+            document.getElementById(
+                "restartTrainingButton"
+            );
+
+        const continueTrainingButton =
+            document.getElementById(
+                "continueTrainingButton"
+            );
+
+
+        // ========================================================
+        // WEBSOCKET
+        // ========================================================
+
+        let ws = null;
+
+        let reconnectTimer = null;
+
+        let latestData = null;
+
+
+        // ========================================================
+        // NEURON POSITIONS
+        // ========================================================
+
+        const neuronPositions = [];
+
+
+        function generateNeuronPositions() {
+
+            neuronPositions.length = 0;
+
+            const rng =
+                mulberry32(42);
+
+            for (
+                let i = 0;
+                i < 200;
+                i++
+            ) {
+
+                neuronPositions.push({
+                    x: 30 + rng() * 340,
+                    y: 30 + rng() * 340
+                });
+
+            }
+        }
+
+
+        function mulberry32(seed) {
+
+            return function() {
+
+                let t =
+                    seed +=
+                    0x6D2B79F5;
+
+                t =
+                    Math.imul(
+                        t ^ t >>> 15,
+                        t | 1
+                    );
+
+                t ^=
+                    t +
+                    Math.imul(
+                        t ^ t >>> 7,
+                        t | 61
+                    );
+
+                return (
+                    (
+                        t ^
+                        t >>> 14
+                    ) >>> 0
+                ) / 4294967296;
+
+            };
+
+        }
+
+
+        generateNeuronPositions();
+
+
+        // ========================================================
+        // GAME DRAWING
+        // ========================================================
+
+        function clearGameCanvas() {
+
+            gCtx.fillStyle =
+                "#080d16";
+
+            gCtx.fillRect(
+                0,
+                0,
+                gameCanvas.width,
+                gameCanvas.height
+            );
+
+        }
+
+
+        function drawGame(data) {
+
+            clearGameCanvas();
+
+            const gridSize =
+                data.grid_size || 12;
+
+            const cell =
+                gameCanvas.width /
+                gridSize;
+
+
+            // Grid
+
+            gCtx.strokeStyle =
+                "#182131";
+
+            gCtx.lineWidth = 1;
+
+
+            for (
+                let x = 0;
+                x <= gridSize;
+                x++
+            ) {
+
+                gCtx.beginPath();
+
+                gCtx.moveTo(
+                    x * cell,
+                    0
+                );
+
+                gCtx.lineTo(
+                    x * cell,
+                    gameCanvas.height
+                );
+
+                gCtx.stroke();
+
+            }
+
+
+            for (
+                let y = 0;
+                y <= gridSize;
+                y++
+            ) {
+
+                gCtx.beginPath();
+
+                gCtx.moveTo(
+                    0,
+                    y * cell
+                );
+
+                gCtx.lineTo(
+                    gameCanvas.width,
+                    y * cell
+                );
+
+                gCtx.stroke();
+
+            }
+
+
+            // Food
+
+            if (
+                data.food !== null &&
+                Array.isArray(data.food)
+            ) {
+
+                gCtx.fillStyle =
+                    "#ef4444";
+
+                gCtx.fillRect(
+                    data.food[0] * cell + 3,
+                    data.food[1] * cell + 3,
+                    cell - 6,
+                    cell - 6
+                );
+
+            }
+
+
+            // Snake
+
+            if (
+                Array.isArray(
+                    data.snake
+                )
+            ) {
+
+                data.snake.forEach(
+                    (segment, index) => {
+
+                        const x =
+                            segment[0] * cell;
+
+                        const y =
+                            segment[1] * cell;
+
+                        gCtx.fillStyle =
+                            index === 0
+                                ? "#34d399"
+                                : "#10b981";
+
+                        gCtx.fillRect(
+                            x + 2,
+                            y + 2,
+                            cell - 4,
+                            cell - 4
+                        );
+
+                    }
+                );
+
+            }
+
+
+            // Completion
+
+            if (data.completed) {
+
+                gCtx.fillStyle =
+                    "rgba(16, 185, 129, 0.85)";
+
+                gCtx.fillRect(
+                    0,
+                    0,
+                    gameCanvas.width,
+                    gameCanvas.height
+                );
+
+                gCtx.fillStyle =
+                    "#ffffff";
+
+                gCtx.font =
+                    "bold 28px Courier New";
+
+                gCtx.textAlign =
+                    "center";
+
+                gCtx.textBaseline =
+                    "middle";
+
+                gCtx.fillText(
+                    "COMPLETE!",
+                    gameCanvas.width / 2,
+                    gameCanvas.height / 2
+                );
+
+            }
+
+
+            gameStatusEl.textContent =
+                data.completed
+                    ? "Game completed"
+                    : data.collision
+                        ? "Snake collided"
+                        : "Simulation running";
+
+        }
+
+
+        // ========================================================
+        // BRAIN DRAWING
+        // ========================================================
+
+        function drawBrain(data) {
+
+            bCtx.fillStyle =
+                "#080d16";
+
+            bCtx.fillRect(
+                0,
+                0,
+                brainCanvas.width,
+                brainCanvas.height
+            );
+
+
+            const positions =
+                data.neuron_positions ||
+                neuronPositions;
+
+            const activity =
+                data.brain_state ||
+                [];
+
+
+            if (
+                !Array.isArray(positions) ||
+                !Array.isArray(activity)
+            ) {
+                return;
+            }
+
+
+            const count =
+                Math.min(
+                    positions.length,
+                    activity.length
+                );
+
+
+            // Activity glow
+
+            for (
+                let i = 0;
+                i < count;
+                i++
+            ) {
+
+                const p =
+                    positions[i];
+
+                const value =
+                    Math.abs(
+                        Number(
+                            activity[i]
+                        ) || 0
+                    );
+
+
+                if (value > 0.02) {
+
+                    bCtx.beginPath();
+
+                    bCtx.arc(
+                        p[0],
+                        p[1],
+                        3 + value * 5,
+                        0,
+                        Math.PI * 2
+                    );
+
+                    bCtx.fillStyle =
+                        `rgba(34, 211, 238, ${
+                            Math.min(
+                                1,
+                                0.15 + value
+                            )
+                        })`;
+
+                    bCtx.fill();
+
+                }
+
+            }
+
+
+            // Neurons
+
+            for (
+                let i = 0;
+                i < count;
+                i++
+            ) {
+
+                const p =
+                    positions[i];
+
+                const value =
+                    Math.abs(
+                        Number(
+                            activity[i]
+                        ) || 0
+                    );
+
+
+                bCtx.beginPath();
+
+                bCtx.arc(
+                    p[0],
+                    p[1],
+                    2.2,
+                    0,
+                    Math.PI * 2
+                );
+
+
+                if (value > 0.15) {
+
+                    bCtx.fillStyle =
+                        "#a78bfa";
+
+                } else {
+
+                    bCtx.fillStyle =
+                        "#334155";
+
+                }
+
+
+                bCtx.fill();
+
+            }
+
+
+            brainStatusEl.textContent =
+                `${count} neurons | ${
+                    data.active_neurons || 0
+                } active`;
+
+        }
+
+
+        // ========================================================
+        // DASHBOARD UPDATE
+        // ========================================================
+
+        function updateDashboard(data) {
+
+            latestData = data;
+
+
+            scoreEl.textContent =
+                data.score ?? 0;
+
+            highScoreEl.textContent =
+                data.high_score ?? 0;
+
+            applesEatenEl.textContent =
+                data.score ?? 0;
+
+            episodeEl.textContent =
+                data.episode ?? 1;
+
+            activeNeuronsEl.textContent =
+                `${data.active_neurons ?? 0} / 200`;
+
+
+            const t =
+                data.training || {};
+
+
+            generationEl.textContent =
+                `${t.generation ?? 0} / ${
+                    t.total_generations ?? 200
+                }`;
+
+
+            trainingStatusEl.textContent =
+                `Training: ${
+                    t.status ?? "idle"
+                }`;
+
+
+            fitnessStatusEl.textContent =
+                `Fitness: ${
+                    t.best_fitness ?? 0
+                }`;
+
+
+            foodStatusEl.textContent =
+                `Mean Food: ${
+                    t.best_food ?? 0
+                }`;
+
+
+            meanActivityEl.textContent =
+                `Mean Activity: ${
+                    data.mean_activity ?? 0
+                }`;
+
+
+            drawGame(data);
+
+            drawBrain(data);
+
+        }
+
+
+        // ========================================================
+        // WEBSOCKET CONNECTION
+        // ========================================================
+
+        function connectWebSocket() {
+
+            if (
+                ws &&
+                (
+                    ws.readyState ===
+                    WebSocket.OPEN
+                    ||
+                    ws.readyState ===
+                    WebSocket.CONNECTING
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            connectionStatusEl.textContent =
+                "Status: Connecting...";
+
+            connectionStatusEl.className =
+                "px-4 py-2 rounded-full border border-yellow-700 bg-gray-800 text-sm text-yellow-400";
+
+
+            const protocol =
+                location.protocol === "https:"
+                    ? "wss:"
+                    : "ws:";
+
+
+            ws = new WebSocket(
+                `${protocol}//${location.host}/ws`
+            );
+
+
+            ws.onopen = () => {
+
+                connectionStatusEl.textContent =
+                    "Status: Connected";
+
+                connectionStatusEl.className =
+                    "px-4 py-2 rounded-full border border-emerald-700 bg-gray-800 text-sm text-emerald-400";
+
+            };
+
+
+            ws.onmessage = (event) => {
+
+                try {
+
+                    const data =
+                        JSON.parse(
+                            event.data
+                        );
+
+                    updateDashboard(
+                        data
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "Invalid WebSocket data:",
+                        error
+                    );
+
+                }
+
+            };
+
+
+            ws.onerror = (error) => {
+
+                console.error(
+                    "WebSocket error:",
+                    error
+                );
+
+                connectionStatusEl.textContent =
+                    "Status: Error";
+
+                connectionStatusEl.className =
+                    "px-4 py-2 rounded-full border border-red-700 bg-gray-800 text-sm text-red-400";
+
+            };
+
+
+            ws.onclose = () => {
+
+                connectionStatusEl.textContent =
+                    "Status: Disconnected";
+
+                connectionStatusEl.className =
+                    "px-4 py-2 rounded-full border border-red-700 bg-gray-800 text-sm text-red-400";
+
+
+                if (reconnectTimer) {
+
+                    clearTimeout(
+                        reconnectTimer
+                    );
+
+                }
+
+
+                reconnectTimer =
+                    setTimeout(
+                        () => {
+                            connectWebSocket();
+                        },
+                        2000
+                    );
+
+            };
+
+        }
+
+
+        // ========================================================
+        // TRAINING
+        // ========================================================
+
+        async function runTraining(
+            mode
+        ) {
+
+            restartTrainingButton.disabled =
+                true;
+
+            continueTrainingButton.disabled =
+                true;
+
+
+            if (mode === "restart") {
+
+                restartTrainingButton.textContent =
+                    "⏳ Restarting...";
+
+            } else {
+
+                continueTrainingButton.textContent =
+                    "⏳ Continuing...";
+
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/start-training",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                mode: mode
+                            })
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.detail ||
+                        "Failed to start training"
+                    );
+
+                }
+
+
+                if (mode === "restart") {
+
+                    trainingStatusEl.textContent =
+                        "Training: restarting";
+
+                } else {
+
+                    trainingStatusEl.textContent =
+                        "Training: continuing";
+
+                }
+
+
+                if (mode === "restart") {
+
+                    restartTrainingButton.textContent =
+                        "⏳ GA Restart Running";
+
+                } else {
+
+                    continueTrainingButton.textContent =
+                        "⏳ GA Continue Running";
+
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Training start error:",
+                    error
+                );
+
+                trainingStatusEl.textContent =
+                    `Training Error: ${
+                        error.message
+                    }`;
+
+            }
+
+
+            // Re-enable the buttons after the
+            // request has been accepted.
+            setTimeout(
+                () => {
+
+                    restartTrainingButton.disabled =
+                        false;
+
+                    continueTrainingButton.disabled =
+                        false;
+
+                    restartTrainingButton.textContent =
+                        "↻ Restart GA";
+
+                    continueTrainingButton.textContent =
+                        "▶ Continue GA";
+
+                },
+                1500
+            );
+
+        }
+
+
+        function restartTraining() {
+
+            runTraining(
+                "restart"
+            );
+
+        }
+
+
+        function continueTraining() {
+
+            runTraining(
+                "continue"
+            );
+
+        }
+
+
+        // ========================================================
+        // INITIALIZE
+        // ========================================================
+
+        clearGameCanvas();
+
+
+        bCtx.fillStyle =
+            "#080d16";
+
+        bCtx.fillRect(
+            0,
+            0,
+            brainCanvas.width,
+            brainCanvas.height
+        );
+
+
+        connectWebSocket();
+
+    </script>
+
+</body>
+</html>
