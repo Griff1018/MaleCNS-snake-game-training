@@ -1,0 +1,17 @@
+# Local Python environments and bytecode
+venv/
+__pycache__/
+*.pyc
+
+# Credentials and generated training artifacts
+.env
+ga_checkpoint.pkl
+training_status.json
+trained_*.npy
+best_trained_*.npy
+fly_mask.npy
+fly_sign.npy
+fly_connectome_metadata.json
+
+# This folder preserves the accidental .gitignore directory and its cache.
+.gitignore_misplaced/

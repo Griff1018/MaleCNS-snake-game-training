@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import traceback
+from pathlib import Path
 
 import numpy as np
 
@@ -19,6 +20,11 @@ from fly_snake.snake_env import SnakeEnv
 
 
 app = FastAPI()
+
+# Always resolve project files from this source directory, even if the server
+# is launched by an IDE or from another working directory.
+PROJECT_ROOT = Path(__file__).resolve().parent
+os.chdir(PROJECT_ROOT)
 
 
 # ================================================================

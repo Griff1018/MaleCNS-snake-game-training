@@ -2,8 +2,14 @@ import json
 import os
 import pickle
 import sys
+from pathlib import Path
 
 import numpy as np
+
+
+# Training artifacts and checkpoints should always live in the project folder.
+PROJECT_ROOT = Path(__file__).resolve().parent
+os.chdir(PROJECT_ROOT)
 
 from fly_snake.snake_env import SnakeEnv
 from fly_snake.brain import (

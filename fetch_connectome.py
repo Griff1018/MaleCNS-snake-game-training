@@ -7,12 +7,14 @@ computes ``matrix @ activation``.  Do not transpose it.
 import json
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 from neuprint import Client, NeuronCriteria, fetch_adjacencies, fetch_neurons
 
 
 SERVER = "https://neuprint.janelia.org"
+PROJECT_ROOT = Path(__file__).resolve().parent
 # Full, synapse-level connectome of an adult male Drosophila CNS.
 DATASET = "male-cns:v1.0"
 N_NEURONS = 200
@@ -40,6 +42,7 @@ def neurotransmitter_signs(neurons, body_ids):
 
 
 def main():
+    os.chdir(PROJECT_ROOT)
     token = os.environ.get("NEUPRINT_TOKEN")
     if not token:
         sys.exit(

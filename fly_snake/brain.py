@@ -1,4 +1,11 @@
+from pathlib import Path
+
 import numpy as np
+
+
+# Model data belongs beside the project source, not beside whichever folder
+# happened to launch Python (for example a web-server process).
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 def random_connectome_mask(n_neurons, sparsity=0.9, seed=0):
@@ -25,8 +32,8 @@ def load_biological_connectome(n_neurons=200, sparsity=0.9, seed=1):
     Falls back to a synthetic sparse connectome if missing.
     """
     try:
-        mask = np.load("fly_mask.npy")
-        sign = np.load("fly_sign.npy")
+        mask = np.load(PROJECT_ROOT / "fly_mask.npy")
+        sign = np.load(PROJECT_ROOT / "fly_sign.npy")
 
         expected_shape = (n_neurons, n_neurons)
         if mask.shape != expected_shape or sign.shape != expected_shape:
